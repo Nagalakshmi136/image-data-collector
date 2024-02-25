@@ -6,6 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 # from webdriver_manager.chrome import ChromeDriverManager
 import sqlite3
 import time
+from tqdm import tqdm
 from selenium.webdriver.common.keys import Keys
 import pandas as pd
 
@@ -16,7 +17,8 @@ def fetch_image_urls(input_file: str):
     connection = sqlite3.connect('images_data.db')
     cursor = connection.cursor()
     cursor.execute("""CREATE TABLE IF NOT EXISTS images(
-                    image_url TEXT,
+                    image_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    image_url TEXT NOT NULL UNIQUE,
                     image_category TEXT,
                     image_title TEXT,
                     image_type TEXT,
@@ -81,11 +83,12 @@ def fetch_image_urls(input_file: str):
         return image_results[0:max_limit]
         
 
-    for ind in df.index:
+    for ind in tqdm(df.index):
         query = df['keyword'][ind]
         max_limit = df['max_limit'][ind]
         urls = fetch_urls(query, max_limit)
         print(len(urls))
+        count = 0
         for url in urls:
             try:
                 url.click()
@@ -95,6 +98,8 @@ def fetch_image_urls(input_file: str):
                 if "http" in image_link:
                     cursor.execute("INSERT INTO images VALUES (?,?,?,NULL,NULL,NULL)",(image_link, query,actual_image.get_attribute('alt')))
                     connection.commit()
+                    count += 1
             except:
                 continue
+        print(count)
     connection.close()
