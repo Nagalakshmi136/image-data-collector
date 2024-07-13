@@ -45,11 +45,14 @@ class Database():
                             """,(copy_to, copy_from))
         self.connection.commit()
         
-    def count_images_per_category(self, table: str):
-        self.cursor.execute("SELECT image_category,COUNT(image_url) FROM ? GROUP BY image_category",(table,))
+    def count_column1_per_column2(self, column1, column2, table: str):
+        self.cursor.execute(f"SELECT {column2},COUNT(DISTINCT({column1})) FROM {table} GROUP BY {column2}")
         img_count_per_category = self.cursor.fetchall()
         print(img_count_per_category)
         return img_count_per_category
+    def count_items(self,table,column):
+        self.cursor.execute(f"SELECT COUNT(DISTINCT({column})) FROM {table} WHERE image_dimensions is NOT NULL")
+        return self.cursor.fetchall()
            
     def alter_table_name(self,old_name: str, new_name: str):
         self.cursor.execute("ALTER TABLE ? RENAME TO ?;",(old_name,new_name))
